@@ -33,7 +33,7 @@ class VaadinGrailsPlugin {
     private static final transient Logger log = LoggerFactory.getLogger("org.codehaus.groovy.grails.plugins.VaadinGrailsPlugin");
 
     // the plugin version
-    def version = "1.5.4"
+    def version = "1.5.4-multi"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.1 > *"
     // the other plugins this plugin depends on
@@ -86,7 +86,7 @@ class VaadinGrailsPlugin {
             config = getConfigLazy();
         }
         //create the vaadin Application definition:
-        "${GrailsAwareApplicationServlet.VAADIN_APPLICATION_BEAN_NAME}"(clazz) { bean ->
+        "${GrailsAwareApplicationServlet.VAADIN_APPLICATION_BEAN_NAME + clazz}"(clazz) { bean ->
             bean.singleton = false; //prototype scope
             bean.autowire = config?.autowire ?: 'byName'
         }
@@ -121,21 +121,21 @@ class VaadinGrailsPlugin {
 
     def doWithSpring = {
         def config = getConfigLazy()
-        if (!config || !(config.applicationClass)) {
+        if (!config || !(config.applicationClasses)) {
             return
         }
 
-        def vaadinApplicationClass = null
+        def vaadinApplicationClasses = []
         application.vaadinClasses.each { vaadinGrailsClass ->
 
             configureComponentClass(vaadinGrailsClass.clazz)
 
-            if (vaadinGrailsClass.clazz.name.equals(config.applicationClass)) {
-                vaadinApplicationClass = vaadinGrailsClass.clazz
+            if (config.applicationClasses.contains(vaadinGrailsClass.clazz.name)) {
+                vaadinApplicationClasses << vaadinGrailsClass.clazz
             }
         }
 
-        if (vaadinApplicationClass) {
+        vaadinApplicationClasses.each { vaadinApplicationClass ->
             configureVaadinApplication.delegate = delegate
             configureVaadinApplication(vaadinApplicationClass, config)
         }
@@ -147,11 +147,11 @@ class VaadinGrailsPlugin {
 
     def doWithWebDescriptor = { webXml ->
         def config = getConfigLazy()
-        if (!config || !(config.applicationClass)) {
+        if (!config || !(config.applicationClasses)) {
             return
         }
 
-        def vaadinApplicationClass = config.applicationClass
+        def vaadinApplicationClasses = config.applicationClasses
         def vaadinProductionMode = config.productionMode
         def vaadinGAEMode = config.googleAppEngineMode
         // def applicationServlet = vaadinGAEMode ? GAE_APPLICATION_SERVLET : APPLICATION_SERVLET
@@ -166,53 +166,60 @@ class VaadinGrailsPlugin {
             }
         }
 
-        def servletName = "VaadinServlet"
-        def widgetset = config.widgetset
-
-        def servlets = webXml."servlet"
-        servlets[servlets.size() - 1] + {
-            "servlet" {
-                "servlet-name"(servletName)
-                "servlet-class"(applicationServlet)
-                "init-param" {
-                    "description"("Vaadin application class to start")
-                    "param-name"("application")
-                    "param-value"(vaadinApplicationClass)
-                }
-
-                if(widgetset){
-                    "init-param" {
-                        "description"("Application widgetset")
-                        "param-name"("widgetset")
-                        "param-value"(widgetset)
-                    }
-                }
-
-                "load-on-startup"("1")
-            }
-        }
-
-        def contextRelativePath = config.contextRelativePath ? config.contextRelativePath : "/";
-        if (!contextRelativePath.endsWith("/")) {
-            contextRelativePath += "/";
-        }
-        def servletMapping = contextRelativePath + "*"
-        def servletMappings = webXml."servlet-mapping"
-        servletMappings[servletMappings.size() - 1] + {
-            "servlet-mapping" {
-                "servlet-name"(servletName)
-                "url-pattern"(servletMapping)
-            }
-        }
-        if (!contextRelativePath.equals("/")) {
-            //need to additionally specify the /VAADIN/* mapping (required by Vaadin):
-            servletMappings[servletMappings.size() - 1] + {
-                "servlet-mapping" {
-                    "servlet-name"(servletName)
-                    "url-pattern"("/VAADIN/*")
-                }
-            }
-        }
+		log.info("Configuring Vaadin application classes and servlets...")
+		vaadinApplicationClasses.eachWithIndex { vaadinApplicationClass, index ->
+			log.info("       class " + vaadinApplicationClass)
+	        def servletName = "VaadinServlet" + vaadinApplicationClass
+			log.info("       servlet " + servletName)
+	        def widgetset = config.widgetset
+	
+	        def servlets = webXml."servlet"
+	        servlets[servlets.size() - 1] + {
+	            "servlet" {
+	                "servlet-name"(servletName)
+	                "servlet-class"(applicationServlet)
+	                "init-param" {
+	                    "description"("Vaadin application class to start")
+	                    "param-name"("application")
+	                    "param-value"(vaadinApplicationClass)
+	                }
+	
+	                if(widgetset){
+	                    "init-param" {
+	                        "description"("Application widgetset")
+	                        "param-name"("widgetset")
+	                        "param-value"(widgetset)
+	                    }
+	                }
+	
+	                "load-on-startup"("1")
+	            }
+	        }
+	
+	        def contextRelativePath = config.contextRelativePaths ? config.contextRelativePaths[index] : "/";
+	        if (!contextRelativePath.endsWith("/")) {
+	            contextRelativePath += "/";
+	        }
+	        def servletMapping = contextRelativePath + "*"
+			log.info("       servlet mapping " + servletMapping)
+	        def servletMappings = webXml."servlet-mapping"
+	        servletMappings[servletMappings.size() - 1] + {
+	            "servlet-mapping" {
+	                "servlet-name"(servletName)
+	                "url-pattern"(servletMapping)
+	            }
+	        }
+	        if (!contextRelativePath.equals("/")) {
+	            //need to additionally specify the /VAADIN/* mapping (required by Vaadin):
+	            servletMappings[servletMappings.size() - 1] + {
+	                "servlet-mapping" {
+	                    "servlet-name"(servletName)
+	                    "url-pattern"("/VAADIN/*")
+	                }
+	            }
+	        }
+			log.info("       done.")
+		}
     }
 
     def getConfigLazy = {
