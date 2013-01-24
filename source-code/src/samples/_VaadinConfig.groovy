@@ -16,6 +16,8 @@ vaadin {
     productionMode = false
 
     googleAppEngineMode = false
+
+    reloadOnVaadinClassChange = false
 }
 
 environments {

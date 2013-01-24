@@ -33,7 +33,7 @@ class VaadinGrailsPlugin {
     private static final transient Logger log = LoggerFactory.getLogger("org.codehaus.groovy.grails.plugins.VaadinGrailsPlugin");
 
     // the plugin version
-    def version = "1.5.8-multi"
+    def version = "1.5.10-multi"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.1 > *"
     // the other plugins this plugin depends on
@@ -275,7 +275,8 @@ class VaadinGrailsPlugin {
 
         Class changedClass = event.source
 
-        if (application.isVaadinClass(changedClass)) {
+        def config = getConfigLazy()
+        if (application.isVaadinClass(changedClass) && config.reloadOnVaadinClassChange) {
 
             //a vaadin component class has changed, but due to 'reachability'
             //we don't know which classes referenced it and might have a stale reference
