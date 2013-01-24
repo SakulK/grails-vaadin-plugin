@@ -20,8 +20,8 @@ grails.project.test.class.dir = "target/test-classes"
 grails.project.test.reports.dir	= "target/test-reports"
 //grails.project.war.file = "target/${appName}-${appVersion}.war"
 
-grails.project.target.level = 1.5
-grails.project.source.level = 1.5
+grails.project.target.level = 1.7
+grails.project.source.level = 1.7
 
 grails.release.scm.enabled = false
 grails.project.repos.default = "grailsCentral"
@@ -51,7 +51,8 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        compile 'com.vaadin:vaadin:6.3.0'
+        provided 'com.vaadin:vaadin:6.8.6'
+        provided 'log4j:log4j:1.2.16'
         build('org.grails.plugins:release:2.0.2') {  export = false }
     }
 

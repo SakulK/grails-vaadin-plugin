@@ -79,13 +79,13 @@ public class GrailsAwareApplicationServlet extends AbstractApplicationServlet {
     @Override
     protected Application getNewApplication(HttpServletRequest request) throws ServletException {
         Application app = null;
-
+        String beanName = VAADIN_APPLICATION_BEAN_NAME + applicationClassName;
         try {
             app = (Application) ApplicationHolder.getApplication().getMainContext()
-                    .getBean(VAADIN_APPLICATION_BEAN_NAME);
+                    .getBean(beanName);
         } catch (BeansException e) {
             if (log.isInfoEnabled()) {
-                log.info("Unable to acquire new Vaadin Application instance from Spring application context.  Falling "
+                log.info("Unable to acquire new Vaadin Application instance for bean name " + beanName + " from Spring application context.  Falling "
                         + "back to a vaadinApplicationClass.newInstance() call "
                         + "(note that this prevents dependency injection)...");
             }

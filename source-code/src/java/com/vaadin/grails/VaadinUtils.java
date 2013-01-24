@@ -20,6 +20,7 @@ import java.util.Locale;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.MessageSource;
+import org.apache.log4j.Logger;
 
 /**
  * Vaadin plugin utility methods - mostly used for supporting dynamic method.
@@ -28,6 +29,8 @@ import org.springframework.context.MessageSource;
  * @since 1.2
  */
 public class VaadinUtils {
+
+    private static final Logger log = Logger.getLogger(VaadinUtils.class);
 
     public static <T> T getBean(final Class<T> clazz) throws BeansException {
         return ApplicationHolder.getApplication().getMainContext().getBean(clazz);
@@ -57,7 +60,7 @@ public class VaadinUtils {
         try {
             message = VaadinUtils.getMessageSource().getMessage(key, args, locale);
         } catch (final Throwable t) {
-            System.err.println(t.getMessage());
+            log.warn(t.getMessage());
         }
         if (message == null) {
             // if fetching values fails, return the key
@@ -83,7 +86,7 @@ public class VaadinUtils {
         try {
             message = VaadinUtils.getMessageSource().getMessage(key, args, defaultValue, locale);
         } catch (final Throwable t) {
-            System.err.println(t.getMessage());
+            log.warn(t.getMessage());
         }
         if (message == null) {
             // if fetching values fails, return the key

@@ -33,7 +33,7 @@ class VaadinGrailsPlugin {
     private static final transient Logger log = LoggerFactory.getLogger("org.codehaus.groovy.grails.plugins.VaadinGrailsPlugin");
 
     // the plugin version
-    def version = "1.5.4-multi"
+    def version = "1.5.8-multi"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.1 > *"
     // the other plugins this plugin depends on
@@ -86,7 +86,9 @@ class VaadinGrailsPlugin {
             config = getConfigLazy();
         }
         //create the vaadin Application definition:
-        "${GrailsAwareApplicationServlet.VAADIN_APPLICATION_BEAN_NAME + clazz}"(clazz) { bean ->
+        def beanName = GrailsAwareApplicationServlet.VAADIN_APPLICATION_BEAN_NAME + clazz.getName()
+        println("Creating Vaadin application bean: " + beanName)
+        "${beanName}"(clazz) { bean ->
             bean.singleton = false; //prototype scope
             bean.autowire = config?.autowire ?: 'byName'
         }
